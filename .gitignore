@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+.env.local
+data/sessions.json
+logs/
+*.log
+.DS_Store
+.vscode/
+.idea/

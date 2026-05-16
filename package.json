@@ -1,0 +1,36 @@
+{
+  "name": "autorunclaude",
+  "version": "0.1.0",
+  "description": "Persistent Claude Code agent accepting commands from terminal & Telegram, 24/7",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "start:dev": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "pm2:start": "pm2 start ecosystem.config.cjs",
+    "pm2:stop": "pm2 stop autorunclaude",
+    "pm2:logs": "pm2 logs autorunclaude",
+    "pm2:restart": "pm2 restart autorunclaude"
+  },
+  "keywords": ["claude-code", "telegram", "agent", "ai"],
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "grammy": "^1.30.0",
+    "node-cron": "^3.0.3",
+    "pino": "^9.5.0",
+    "pino-pretty": "^11.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "@types/node-cron": "^3.0.11",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
