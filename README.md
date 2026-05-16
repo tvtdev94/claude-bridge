@@ -1,14 +1,33 @@
-# autorunclaude
+<div align="center">
 
-Persistent Claude Code agent. Runs 24/7. Accepts commands from your **local terminal** and from **Telegram**. Uses your Claude **subscription** (not API key). Has full access to every skill, plugin, slash command, MCP server, and agent your local `claude` CLI sees.
+<img src="docs/assets/hero.png" alt="claude-bridge" width="640" />
 
-## What it does
+# claude-bridge
 
-- Wraps `claude --print --output-format stream-json` in a long-lived Node.js daemon.
-- Each user (terminal user or whitelisted Telegram user) gets their own persistent conversation session — survives restarts.
-- Telegram bot streams Claude's response live by editing a single message until done.
-- Optional cron-based **proactive triggers** to fire prompts on schedule.
-- Cloud-portable: identical setup on Windows, macOS, Linux, VPS.
+**A persistent Claude Code agent that lives in your terminal and your Telegram.**
+
+[![Node](https://img.shields.io/badge/node-20%20LTS-43853d?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](#)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)](#)
+[![Status](https://img.shields.io/badge/status-24%2F7-success)](#)
+
+</div>
+
+---
+
+Wraps `claude --print --output-format stream-json` in a long-lived Node daemon. Uses your Claude **subscription**, not the API key. Every skill, plugin, slash command, MCP server, and agent your local `claude` CLI sees — claude-bridge sees too.
+
+## Highlights
+
+| | |
+|---|---|
+| **Two channels in one daemon** | Local terminal + Telegram bot, sharing the same agent core. |
+| **Persistent sessions** | Each user gets a stable UUID. Conversations survive restarts. |
+| **Live Telegram streaming** | One message is edited in place as Claude responds — no chunk spam. |
+| **Proactive triggers** | Cron-driven prompts fire on schedule and push to terminal, Telegram, or both. |
+| **Subscription-powered** | No API key bill. Auth flows through the `claude` CLI you already use. |
+| **Portable** | Same setup runs on Windows, macOS, Linux, and any VPS. |
 
 ## Architecture
 
@@ -29,7 +48,7 @@ Persistent Claude Code agent. Runs 24/7. Accepts commands from your **local term
                         └────────────────────┘
 ```
 
-See `docs/system-architecture.md` for details.
+Full details: [`docs/system-architecture.md`](docs/system-architecture.md).
 
 ## Quick start
 
@@ -44,7 +63,7 @@ cp .env.example .env
 # 3. ensure claude CLI is logged in via subscription
 claude auth login
 
-# 4. dev run (with terminal channel + Telegram)
+# 4. dev run (terminal + Telegram)
 npm run start:dev
 
 # 5. production daemon
@@ -53,44 +72,59 @@ npm run pm2:start
 npm run pm2:logs
 ```
 
-Full bot creation walkthrough in [`docs/setup-guide.md`](docs/setup-guide.md).
+Bot creation walkthrough: [`docs/setup-guide.md`](docs/setup-guide.md).
 
 ## Channels
 
 ### Terminal
 
-Type prompts directly. Commands:
+Type prompts directly.
 
-- `/new` — drop current conversation, start fresh
-- `/status` — show session key
-- `/help` — list commands
-- `/exit` — stop daemon
+| Command   | Effect                              |
+|-----------|-------------------------------------|
+| `/new`    | Drop current conversation, restart  |
+| `/status` | Show session key                    |
+| `/help`   | List commands                       |
+| `/exit`   | Stop daemon                         |
 
 ### Telegram
 
-Whitelist your Telegram user ID via `TELEGRAM_ALLOWED_USER_IDS`. Then DM the bot. Commands:
+Whitelist your Telegram user ID via `TELEGRAM_ALLOWED_USER_IDS`, then DM the bot.
 
-- `/new` — fresh conversation
-- `/status` — session info
-- `/help` — help menu
+| Command   | Effect                |
+|-----------|-----------------------|
+| `/new`    | Fresh conversation    |
+| `/status` | Session info          |
+| `/help`   | Help menu             |
 
-Each Telegram user gets a separate session (or all share one if `SESSION_MODE=shared`).
+Each Telegram user gets a separate session — or all share one if `SESSION_MODE=shared`.
+
+The bot also supports **media-back markers** so Claude can send screenshots, documents, videos, and audio through Telegram:
+
+```
+[[SEND_PHOTO: C:\path\to\image.png | optional caption]]
+[[SEND_DOCUMENT: ./report.pdf]]
+[[SEND_VIDEO: clip.mp4]]
+[[SEND_AUDIO: voice.ogg]]
+```
+
+Markers are stripped from the user-visible reply.
 
 ## Proactive triggers
 
-Define in `.env`:
+Inline JSON in `.env`:
 
 ```env
 PROACTIVE_TRIGGERS=[{"name":"morning-check","cron":"0 9 * * *","prompt":"Summarise overnight server logs"}]
 ```
 
-Or point to a JSON file:
+Or point to a file:
 
 ```env
 PROACTIVE_TRIGGERS=./triggers.json
 ```
 
-Results push to whatever channel `PROACTIVE_NOTIFY` says (`terminal`, `telegram`, `both`).
+Results push to whichever channel `PROACTIVE_NOTIFY` names — `terminal`, `telegram`, or `both`.
 
 ## Deployment
 
@@ -106,14 +140,18 @@ pm2 startup     # optional — auto-start on boot
 
 ### Cloud / VPS
 
-Identical commands. Make sure:
+Identical commands. Pre-flight:
 
 1. `claude` CLI installed and `claude auth login` completed under the same user
-2. `.env` present in project root
-3. Project directory the agent operates in (`CLAUDE_WORK_DIR`) actually exists
+2. `.env` present in the project root
+3. `CLAUDE_WORK_DIR` directory exists and is the path you want Claude to operate in
 
 Tested on Node 20 LTS.
 
 ## Security note
 
-`CLAUDE_PERMISSION_MODE=bypassPermissions` means Claude can read/write any file under `CLAUDE_WORK_DIR` and run any shell command without confirmation. Run only inside trusted directories. Whitelist Telegram IDs carefully — anyone on the whitelist gets full shell access through your machine.
+`CLAUDE_PERMISSION_MODE=bypassPermissions` means Claude can read/write any file under `CLAUDE_WORK_DIR` and run any shell command without confirmation. Run only inside trusted directories. Whitelist Telegram IDs carefully — anyone on the list gets full shell access through your machine.
+
+## License
+
+MIT.
