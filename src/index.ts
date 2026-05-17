@@ -60,7 +60,12 @@ async function main(): Promise<void> {
     });
   }
 
+  // Guard against double-shutdown if both SIGINT and SIGTERM arrive
+  // (or PM2 fires the same signal twice during a restart).
+  let isShuttingDown = false;
   const shutdown = async (signal: string) => {
+    if (isShuttingDown) return;
+    isShuttingDown = true;
     logger.info({ signal }, 'shutting down');
     scheduler?.stop();
     terminal?.stop();
