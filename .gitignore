@@ -8,3 +8,7 @@ logs/
 .DS_Store
 .vscode/
 .idea/
+
+# session/scratch screenshots
+/*.png
+!docs/assets/*.png

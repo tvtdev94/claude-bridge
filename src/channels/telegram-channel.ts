@@ -75,6 +75,25 @@ export class TelegramChannel {
     }
   }
 
+  /**
+   * Broadcast a message to every whitelisted user and chat.
+   * Used for daemon lifecycle notifications (online / offline).
+   */
+  async broadcast(text: string): Promise<void> {
+    const targets = new Set<number>([
+      ...this.cfg.allowedUserIds,
+      ...this.cfg.allowedChatIds,
+    ]);
+    if (targets.size === 0) return;
+    await Promise.allSettled(
+      [...targets].map((id) =>
+        this.bot.api.sendMessage(id, text).catch((err) => {
+          logger.error({ err, id }, 'broadcast send failed');
+        }),
+      ),
+    );
+  }
+
   private wire(): void {
     this.bot.use(async (ctx, next) => {
       if (!this.isAuthorized(ctx)) {

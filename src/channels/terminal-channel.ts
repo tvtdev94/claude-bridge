@@ -53,7 +53,10 @@ export class TerminalChannel {
 
     if (line === '/exit') {
       output.write('shutting down…\n');
-      process.exit(0);
+      // Route through the SIGTERM handler so lifecycle hooks (e.g. Telegram
+      // offline broadcast, session save) run before exit.
+      process.kill(process.pid, 'SIGTERM');
+      return;
     }
     if (line === '/help') {
       output.write(HELP + '\n');

@@ -48,11 +48,31 @@ async function main(): Promise<void> {
     scheduler.start();
   }
 
+  if (telegram) {
+    const onlineMsg = [
+      '🟢 autorunclaude online',
+      `Started: ${new Date().toISOString()}`,
+      `Work dir: ${cfg.claude.workDir}`,
+      `Session mode: ${cfg.session.mode}`,
+    ].join('\n');
+    await telegram.broadcast(onlineMsg).catch((err) => {
+      logger.error({ err }, 'startup broadcast failed');
+    });
+  }
+
   const shutdown = async (signal: string) => {
     logger.info({ signal }, 'shutting down');
     scheduler?.stop();
     terminal?.stop();
-    if (telegram) await telegram.stop().catch(() => undefined);
+    if (telegram) {
+      const offlineMsg = [
+        '🔴 autorunclaude offline',
+        `Stopped: ${new Date().toISOString()}`,
+        `Signal: ${signal}`,
+      ].join('\n');
+      await telegram.broadcast(offlineMsg).catch(() => undefined);
+      await telegram.stop().catch(() => undefined);
+    }
     sessions.saveSync();
     process.exit(0);
   };
