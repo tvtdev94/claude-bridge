@@ -56,6 +56,12 @@ export class TelegramChannel {
 
     void this.bot.start({
       onStart: (info) => logger.info({ username: info.username }, 'telegram bot started'),
+      // Discard any backlog accumulated while the bot was offline.
+      // Without this, every restart re-processes the same pending updates
+      // (Telegram keeps them up to 24h), causing infinite restart loops if
+      // a prompt's side-effect kills the bot before grammy confirms the
+      // offset via the next getUpdates call.
+      drop_pending_updates: true,
     });
   }
 
